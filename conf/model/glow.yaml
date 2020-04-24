@@ -1,0 +1,5 @@
+model:
+  K: 16
+  L: 3
+  conditional: true
+  hidden_width: 512

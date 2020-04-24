@@ -1,0 +1,5 @@
+defaults:
+  - model: glow
+  - dataset: mnist
+
+check_model: true

@@ -11,7 +11,9 @@ from omegaconf import DictConfig
 from future import CustomSchedule, bits_x
 from models.glow import Glow
 
-logger = logging.getLogger(__name__)
+logger = tf.get_logger()
+logger.setLevel(logging.DEBUG)
+
 
 
 class Task:
@@ -39,16 +41,16 @@ class Task:
         self.zaux_dims = np.prod(zaux.shape[1:])
 
         # summarize
-        print("z_f's shape             : {}".format(self.z_shape))
-        print("log_det_jacobian's shape: {}".format(ldj.shape))
-        print("z_aux's shape           : {}".format(self.zaux_shape))
+        logger.info("z_f's shape             : {}".format(self.z_shape))
+        logger.info("log_det_jacobian's shape: {}".format(ldj.shape))
+        logger.info("z_aux's shape           : {}".format(self.zaux_shape))
         self.glow.summary()
 
 
 @hydra.main(config_path="./conf/config.yaml")
 def main(cfg: DictConfig):
     task = Task(cfg)
-    task.check_model()
+
 
 
 if __name__ == '__main__':

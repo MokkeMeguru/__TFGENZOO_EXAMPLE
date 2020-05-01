@@ -72,12 +72,12 @@ class Glow(Model):
 
         for flow in reversed(self.flows):
             if isinstance(flow, Squeezing):
-                if flow.with_zaux and zaux is not None:
+                if flow.with_zaux:
                     x, zaux = flow(x, zaux=zaux, inverse=True)
                 else:
                     x = flow(x, inverse=True)
             elif isinstance(flow, FactorOutBase):
-                if flow.with_zaux and zaux is not None:
+                if flow.with_zaux:
                     x, zaux = flow(x, zaux=zaux, inverse=True,
                                    temparature=temparature)
                 else:

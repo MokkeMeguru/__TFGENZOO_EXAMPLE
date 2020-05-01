@@ -3,3 +3,5 @@ defaults:
   - dataset: mnist
 
 check_model: true
+batch_sizes: [128, 256, 256]
+epochs: 64

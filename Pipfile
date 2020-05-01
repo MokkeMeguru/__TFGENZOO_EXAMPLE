@@ -13,6 +13,8 @@ pudb = "*"
 [packages]
 tfgenzoo = {git = "https://github.com/MokkeMeguru/TFGENZOO.git",ref = "master"}
 hydra-core = "*"
+sklearn = "*"
+tqdm = "*"
 
 [requires]
 python_version = "3.7"

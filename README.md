@@ -4,6 +4,9 @@ this repository is the introduction to use [TFGENZOO](https://github.com/MokkeMe
 # HOW TO RUN IT?
 
 ```
+docker-compose build
+docker-compose exec tfgenzoo /bin/bash
+tmux
 python glow.py
 ```
 

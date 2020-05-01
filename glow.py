@@ -168,7 +168,8 @@ class Task:
                 self.valid_step(x['img'])
             ckpt_save_path = self.ckpt_manager.save()
             with self.writer.as_default():
-                self.sample_image(self.hparams['beta_z'], self.hparams['beta_zaux'])
+                self.sample_image(self.hparams['inference']['beta_z'],
+                                  self.hparams['inference']['beta_zaux'])
                 tf.summary.scalar('train/nll', self.train_nll.result(),
                                   step=self.optimizer.iterations)
                 tf.summary.scalar('valid/nll', self.valid_nll.result(),
@@ -201,17 +202,4 @@ def main(cfg: DictConfig):
     task.eval()
 
 if __name__ == '__main__':
-    cfg = {
-        "check_model": True,
-        "images": {
-            "channel": 1,
-            "height": 32,
-            "width": 32},
-        "model": {
-            "hidden_width": 512,
-            "conditional": False,
-            "K": 16,
-            "L": 3},
-        "conditional": True,
-        "hidden_width": 512}
     main()

@@ -3,3 +3,6 @@ model:
   L: 3
   conditional: true
   hidden_width: 512
+inference:
+  beta_z: 0.75
+  beta_zaux: 0.75

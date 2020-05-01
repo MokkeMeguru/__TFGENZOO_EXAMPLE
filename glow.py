@@ -47,15 +47,18 @@ class Task:
     def check_model(self):
         x = tf.keras.Input(self.input_shape)
         z, ldj, zaux, ll = self.glow(x)
-        self.z_shape = list(z.shape)
-        self.zaux_shape = list(zaux.shape)
+        self.z_shape = list(z.shape[1:])
+        self.zaux_shape = list(zaux.shape[1:])
         self.z_dims = np.prod(z.shape[1:])
         self.zaux_dims = np.prod(zaux.shape[1:])
 
         # summarize
-        logger.info("z_f's shape             : {}".format(self.z_shape))
-        logger.info("log_det_jacobian's shape: {}".format(ldj.shape))
-        logger.info("z_aux's shape           : {}".format(self.zaux_shape))
+        logger.info(
+            "z_f's shape             : {}".format([None] + self.z_shape))
+        logger.info(
+            "log_det_jacobian's shape: {}".format(ldj.shape))
+        logger.info(
+            "z_aux's shape           : {}".format([None] + self.zaux_shape))
         self.glow.summary()
 
     def load_dataset(self):

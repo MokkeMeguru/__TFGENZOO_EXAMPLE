@@ -6,4 +6,5 @@ RUN mkdir /workspace
 RUN pip install -U pip
 ADD requirements.txt /tmp/
 RUN pip install -r /tmp/requirements.txt
+RUN pip install git+https://github.com/MokkeMeguru/TFGENZOO.git@master#egg=TFGENZOO
 WORKDIR /workspace

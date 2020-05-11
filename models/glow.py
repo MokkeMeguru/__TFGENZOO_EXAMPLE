@@ -65,7 +65,7 @@ class Glow(Model):
                 x: tf.Tensor,
                 zaux: tf.Tensor,
                 training: bool,
-                temparature: float):
+                temparature: float=1.0):
         """inverse
         latent -> object
         """

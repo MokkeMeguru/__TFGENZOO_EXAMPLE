@@ -155,7 +155,7 @@ class Task:
                              step=self.optimizer.iterations)
             z, ldj, zaux, ll = self.glow(x["img"][:4],
                                          training=False)
-            x, ildj = self.glow.inverse(z, zaux, training=False)
+            x, ildj = self.glow.inverse(z, zaux, training=False, temparature=1.0)
             tf.summary.image("reversed image", x,
                              max_outputs=4,
                              step=self.optimizer.iterations)

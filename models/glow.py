@@ -2,12 +2,13 @@ from typing import Dict
 
 import tensorflow as tf
 from tensorflow.keras import Model
+
 from TFGENZOO.flows import (Actnorm, AffineCoupling, AffineCouplingMask,
                             FlowModule, Inv1x1Conv)
 from TFGENZOO.flows.factor_out import FactorOut, FactorOutBase
 from TFGENZOO.flows.quantize import LogitifyImage
 from TFGENZOO.flows.squeeze import Squeezing
-from TFGENZOO.flows.utils.util import ShallowResNet
+from TFGENZOO.layers.resnet import ShallowResNet
 
 
 class Glow(Model):

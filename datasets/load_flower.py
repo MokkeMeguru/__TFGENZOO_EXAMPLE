@@ -18,7 +18,10 @@ def convert(sample):
     label = sample["label"]
     img = tf.image.convert_image_dtype(img, tf.float32)
     img = tf.image.resize(img, [64, 64], method="bilinear", preserve_aspect_ratio=True)
-    return img, label
+    data = {}
+    data['img'] = img
+    data['label'] = label
+    return data
 
 
 def augument(sample):
@@ -28,7 +31,10 @@ def augument(sample):
     img = tf.image.resize(img, [75, 75], method="bilinear")
     img = tf.image.random_crop(img, [64, 64, 3])
     img = tf.image.random_brightness(img, max_delta=0.1)
-    return img, label
+    data = {}
+    data['img'] = img
+    data['label'] = label
+    return data
 
 
 def load_dataset(batch_sizes: Tuple[int, int, int] = None, with_log: bool = False):
@@ -60,8 +66,8 @@ def load_dataset(batch_sizes: Tuple[int, int, int] = None, with_log: bool = Fals
     )
     if with_log:
         sample = next(train_datasets.as_numpy_iterator())
-        logger.info("image size: {}".format(sample[0].shape[1:]))
-        print(sample[0].shape)
+        logger.info("image size: {}".format(sample['img'].shape[1:]))
+        print(sample['img'].shape)
         import matplotlib.pyplot as plt
 
         for i in range(25):
@@ -69,9 +75,9 @@ def load_dataset(batch_sizes: Tuple[int, int, int] = None, with_log: bool = Fals
             plt.xticks([])
             plt.yticks([])
             plt.grid(False)
-            print(sample[0][i].shape)
-            plt.imshow(sample[0][i])
-            plt.xlabel(sample[1][i])
+            print(sample['img'][i].shape)
+            plt.imshow(sample['img'][i])
+            plt.xlabel(sample['label'][i])
         plt.show()
     return train_datasets, valid_datasets, test_datasets
 

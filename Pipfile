@@ -15,6 +15,9 @@ tfgenzoo = {git = "https://github.com/MokkeMeguru/TFGENZOO.git",ref = "master"}
 hydra-core = "*"
 sklearn = "*"
 tqdm = "*"
+tensorflow-datasets = "*"
+opencv-python = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.7"

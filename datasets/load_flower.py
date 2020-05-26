@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import logging
 from typing import Tuple
@@ -12,25 +12,46 @@ logger.setLevel(logging.DEBUG)
 
 SHUFFLE_BUFFER_SIZE = 10000
 
-
+@tf.function
 def convert(sample):
     img = sample["image"]
     label = sample["label"]
-    img = tf.image.convert_image_dtype(img, tf.float32)
+    img = tf.cast(img, tf.float32)
+    img = img / 255.0
+    if img.get_shape().is_fully_defined():
+        h,w, c = img.get_shape().as_list()
+    else:
+       static_shape = img.get_shape().with_rank(rank=3).as_list()
+       dynamic_shape = tf.unstack(tf.shape(img), 3)
+       h, w, c = [s if s is not None else d for s, d in zip(static_shape, dynamic_shape)]
+    small = tf.minimum(h, w)
+    img = tf.image.resize_with_crop_or_pad(img, small, small)
     img = tf.image.resize(img, [64, 64], method="bilinear", preserve_aspect_ratio=True)
+    img = tf.clip_by_value(img, 0.0, 1.0)
     data = {}
     data['img'] = img
     data['label'] = label
     return data
 
-
+@tf.function
 def augument(sample):
     img = sample["image"]
     label = sample["label"]
-    img = tf.image.convert_image_dtype(img, tf.float32)
-    img = tf.image.resize(img, [75, 75], method="bilinear")
+    img = tf.cast(img, tf.float32)
+    img = img / 255.0
+    if img.get_shape().is_fully_defined():
+        h,w, c = img.get_shape().as_list()
+    else:
+       static_shape = img.get_shape().with_rank(rank=3).as_list()
+       dynamic_shape = tf.unstack(tf.shape(img), 3)
+       h, w, c = [s if s is not None else d for s, d in zip(static_shape, dynamic_shape)]
+    small = tf.minimum(h, w)
+    img = tf.image.resize_with_crop_or_pad(img, small, small)
+    
+    img = tf.image.resize(img, [72, 72], method="bilinear", preserve_aspect_ratio=True)
     img = tf.image.random_crop(img, [64, 64, 3])
     img = tf.image.random_brightness(img, max_delta=0.1)
+    img = tf.clip_by_value(img, 0.0, 1.0)
     data = {}
     data['img'] = img
     data['label'] = label
@@ -67,6 +88,8 @@ def load_dataset(batch_sizes: Tuple[int, int, int] = None, with_log: bool = Fals
     if with_log:
         sample = next(train_datasets.as_numpy_iterator())
         logger.info("image size: {}".format(sample['img'].shape[1:]))
+        print(tf.reduce_max(sample['img']))
+        print(tf.reduce_min(sample['img']))
         print(sample['img'].shape)
         import matplotlib.pyplot as plt
 

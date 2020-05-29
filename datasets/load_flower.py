@@ -26,7 +26,7 @@ def convert(sample):
        h, w, c = [s if s is not None else d for s, d in zip(static_shape, dynamic_shape)]
     small = tf.minimum(h, w)
     img = tf.image.resize_with_crop_or_pad(img, small, small)
-    img = tf.image.resize(img, [64, 64], method="bilinear", preserve_aspect_ratio=True)
+    img = tf.image.resize(img, [48, 48], method="bilinear", preserve_aspect_ratio=True)
     img = tf.clip_by_value(img, 0.0, 1.0)
     data = {}
     data['img'] = img
@@ -48,8 +48,8 @@ def augument(sample):
     small = tf.minimum(h, w)
     img = tf.image.resize_with_crop_or_pad(img, small, small)
     
-    img = tf.image.resize(img, [72, 72], method="bilinear", preserve_aspect_ratio=True)
-    img = tf.image.random_crop(img, [64, 64, 3])
+    img = tf.image.resize(img, [64, 64], method="bilinear", preserve_aspect_ratio=True)
+    img = tf.image.random_crop(img, [48, 48, 3])
     img = tf.image.random_brightness(img, max_delta=0.1)
     img = tf.clip_by_value(img, 0.0, 1.0)
     data = {}

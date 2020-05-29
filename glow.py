@@ -160,6 +160,7 @@ class Task:
         z = z_distribution.sample(4)
         z = tf.reshape(z, [-1] + self.z_shape[1:])
         x, ildj = self.glow.inverse(z, None, training=False, temparature=beta_zaux)
+        x = tf.clip_by_value(x, 0.0, 1.0)
         tf.summary.image(
             "generated image", x, step=self.optimizer.iterations, max_outputs=4
         )
@@ -172,6 +173,7 @@ class Task:
             )
             z, ldj, zaux, ll = self.glow(x["img"][:4], training=False)
             x, ildj = self.glow.inverse(z, zaux, training=False, temparature=1.0)
+            x = tf.clip_by_value(x, 0.0, 1.0)
             tf.summary.image(
                 "reversed image", x, max_outputs=4, step=self.optimizer.iterations
             )

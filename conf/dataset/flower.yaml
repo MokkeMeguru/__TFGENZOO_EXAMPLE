@@ -1,5 +1,5 @@
 image_name: flower
 images:
-  width: 64
-  height: 64
+  width: 48
+  height: 48
   channel: 3

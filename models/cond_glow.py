@@ -68,9 +68,7 @@ def CondNet(input_shape):
         outputs.append(x)
     return tf.keras.Model(inputs, outputs[1:])
 
-
 # CondNet([48, 48, 1]).summary()
-
 
 class CGlow(Model):
     def __init__(self, hparams: Dict):
@@ -152,8 +150,8 @@ class CGlow(Model):
         latent -> object
         """
         inverse_log_det_jacobian = tf.zeros(tf.shape(x)[0:1])
-
-        for idx, flow in enumerate(reversed(self.flows)):
+        idx = 0
+        for flow in enumerate(reversed(self.flows)):
             if isinstance(flow, Squeezing):
                 if flow.with_zaux:
                     if zaux is not None:
@@ -176,11 +174,11 @@ class CGlow(Model):
                     training=training,
                 )
                 inverse_log_det_jacobian += ldj
+                idx += 1
             else:
                 x, ldj = flow(
                     x,
                     inverse=True,
-                    cond=conds[self.model_params["L"] - idx - 1],
                     training=training,
                 )
                 inverse_log_det_jacobian += ldj 
@@ -190,10 +188,12 @@ class CGlow(Model):
         """forward
         object -> latent
         """
+        print(x.shape)
         zaux = None
         log_det_jacobian = tf.zeros(tf.shape(x)[0:1])
         log_likelihood = tf.zeros(tf.shape(x)[0:1])
-        for idx, flow in enumerate(self.flows):
+        idx = 0
+        for flow in self.flows:
             if isinstance(flow, Squeezing):
                 if flow.with_zaux:
                     x, zaux = flow(x, zaux=zaux)
@@ -203,9 +203,10 @@ class CGlow(Model):
                 x, zaux, ll = flow(x, zaux=zaux)
                 log_likelihood += ll
             elif isinstance(flow, ConditionalFlowModule):
-                x, ldj = flow(x, cond=conds[idx], training=training)
+               x, ldj = flow(x, cond=conds[idx], training=training)
+                idx += 1
             else:
-                x, ldj = flow(x, cond=conds[idx], training=training)
+                x, ldj = flow(x, training=training)
         return x, log_det_jacobian, zaux, log_likelihood
 
 

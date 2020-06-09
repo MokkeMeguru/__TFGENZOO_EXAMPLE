@@ -1,4 +1,3 @@
-model_type: w/o-cond
 model:
   K: 16
   L: 3

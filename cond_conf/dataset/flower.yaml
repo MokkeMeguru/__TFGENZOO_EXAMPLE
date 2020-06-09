@@ -1,0 +1,10 @@
+image_name: flower
+images:
+  cond:
+    width: 48
+    height: 48
+    channel: 1
+  base:
+    width: 48
+    height: 48
+    channel: 2

@@ -9,15 +9,21 @@ epc = "*"
 python-language-server = {extras = ["all"],version = "*"}
 ipython = "*"
 pudb = "*"
+ptvsd = "*"
 
 [packages]
-tfgenzoo = {git = "https://github.com/MokkeMeguru/TFGENZOO.git",ref = "master"}
+tfgenzoo = {git = "https://github.com/MokkeMeguru/TFGENZOO.git",ref = "dev/conditional"}
 hydra-core = "*"
 sklearn = "*"
 tqdm = "*"
-tensorflow-datasets = "*"
 opencv-python = "*"
 matplotlib = "*"
+scikit-image = "*"
+scikit-learn = "*"
+tfds-nightly = "*"
 
 [requires]
 python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true

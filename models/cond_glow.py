@@ -129,7 +129,11 @@ class CGlow(Model):
         temparature: float = 1.0,
     ):
         # setup conditional input
+<<<<<<< HEAD
         conds = self.cond_net(x[..., 0])
+=======
+        conds = self.cond_net(x[..., 0:1])
+>>>>>>> origin/master
         x = x[..., 1:]
 
         assert (
@@ -176,7 +180,18 @@ class CGlow(Model):
                     training=training,
                 )
                 inverse_log_det_jacobian += ldj
+<<<<<<< HEAD
             raise Exception()
+=======
+            else:
+                x, ldj = flow(
+                    x,
+                    inverse=True,
+                    cond=conds[self.model_params["L"] - idx - 1],
+                    training=training,
+                )
+                inverse_log_det_jacobian += ldj 
+>>>>>>> origin/master
         return x, inverse_log_det_jacobian
 
     def forward(self, x: tf.Tensor, conds: List[tf.Tensor], training: bool):
@@ -198,7 +213,11 @@ class CGlow(Model):
             elif isinstance(flow, ConditionalFlowModule):
                 x, ldj = flow(x, cond=conds[idx], training=training)
             else:
+<<<<<<< HEAD
                 raise Exception()
+=======
+                x, ldj = flow(x, cond=conds[idx], training=training)
+>>>>>>> origin/master
         return x, log_det_jacobian, zaux, log_likelihood
 
 

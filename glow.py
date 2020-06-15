@@ -46,8 +46,9 @@ class Task:
         self.setup_writer()
 
     def check_model(self):
+        self.glow.build(tuple([128] + self.input_shape))
         x = tf.keras.Input(self.input_shape)
-        z, ldj, zaux, ll = self.glow(x)
+        z, ldj, zaux, ll = self.glow(x, inverse=False)
         self.z_shape = list(z.shape)
         self.zaux_shape = list(zaux.shape)
         self.z_dims = np.prod(z.shape[1:])

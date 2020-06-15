@@ -12,7 +12,7 @@ pudb = "*"
 ptvsd = "*"
 
 [packages]
-tfgenzoo = {git = "https://github.com/MokkeMeguru/TFGENZOO.git",ref = "dev/conditional"}
+tfgenzoo = "==1.2.1"
 hydra-core = "*"
 sklearn = "*"
 tqdm = "*"

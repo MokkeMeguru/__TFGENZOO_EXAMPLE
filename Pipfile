@@ -12,7 +12,7 @@ pudb = "*"
 ptvsd = "*"
 
 [packages]
-tfgenzoo = "==1.2.1"
+tfgenzoo = "==1.2.4.post6"
 hydra-core = "*"
 sklearn = "*"
 tqdm = "*"

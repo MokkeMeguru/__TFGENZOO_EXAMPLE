@@ -21,7 +21,9 @@ Mean = metrics.Mean
 Adam = optimizers.Adam
 logger = tf.get_logger()
 logger.setLevel(logging.DEBUG)
-
+gpu_devices = tf.config.experimental.list_physical_devices("GPU")
+for device in gpu_devices:
+    tf.config.experimental.set_memory_growth(device, True)
 
 class Task:
     def __init__(self, hparams: Dict):
@@ -46,7 +48,7 @@ class Task:
         self.setup_writer()
 
     def check_model(self):
-        self.glow.build(tuple([128] + self.input_shape))
+        self.glow.build(tuple([None] + self.input_shape))
         x = tf.keras.Input(self.input_shape)
         z, ldj, zaux, ll = self.glow(x, inverse=False)
         self.z_shape = list(z.shape)

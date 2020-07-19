@@ -4,7 +4,7 @@ RUN apt-get update
 RUN apt-get install -y zsh tmux wget git
 RUN mkdir /workspace
 RUN pip install -U pip
-ADD requirements.txt /tmp/
-RUN pip install -r /tmp/requirements.txt
-RUN pip install git+https://github.com/MokkeMeguru/TFGENZOO.git@master#egg=TFGENZOO
+ADD test.txt /tmp/
+RUN pip install -r /tmp/test.txt
+# RUN pip install git+https://github.com/MokkeMeguru/TFGENZOO.git@master#egg=TFGENZOO
 WORKDIR /workspace

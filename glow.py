@@ -34,19 +34,24 @@ class Task:
         ]
         self.pixels = np.prod(self.input_shape)
 
-        self.glow = Glow(self.hparams)
-        self.check_model()
+        self.strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
         self.load_dataset()
-        self.setup_target_distribution()
-        self.setup_optimizer()
-        self.setup_metrics()
+
+        with self.strategy.scope():
+            self.glow = Glow(self.hparams)
+            self.check_model()
+            self.setup_target_distribution()
+            self.setup_optimizer()
+            self.setup_metrics()
         self.setup_checkpoint(
             Path(self.hparams.get("checkpoint_path", "checkpoints/glow"))
         )
         self.setup_writer()
 
     def check_model(self):
-        # self.glow.build(tuple([None] + self.input_shape))
+        print("check model")
+        print(self.input_shape)
+        self.glow.build(tuple([None] + self.input_shape))
         x = tf.keras.Input(self.input_shape)
         z, ldj, zaux, ll = self.glow(x, inverse=False)
         self.z_shape = list(z.shape)
@@ -67,7 +72,7 @@ class Task:
                 self.valid_dataset,
                 self.test_dataset,
             ) = load_mnist.load_dataset(
-                batch_sizes=self.hparams["batch_sizes"], with_log=True
+                batch_sizes=self.hparams["batch_sizes"], with_log=False
             )
         elif self.hparams["image_name"] == "flower":
             (
@@ -75,8 +80,17 @@ class Task:
                 self.valid_dataset,
                 self.test_dataset,
             ) = load_flower.load_dataset(
-                batch_sizes=self.hparams["batch_sizes"], with_log=True
+                batch_sizes=self.hparams["batch_sizes"], with_log=False
             )
+        self.train_distribute_dataset = self.strategy.experimental_distribute_dataset(
+            self.train_dataset
+        )
+        self.valid_distribute_dataset = self.strategy.experimental_distribute_dataset(
+            self.valid_dataset
+        )
+        self.test_distribute_dataset = self.strategy.experimental_distribute_dataset(
+            self.test_dataset
+        )
 
     def setup_target_distribution(self):
         z_distribution = tfp.distributions.MultivariateNormalDiag(
@@ -118,7 +132,6 @@ class Task:
     def setup_writer(self):
         self.writer = tf.summary.create_file_writer(logdir="glow_log")
 
-    @tf.function
     def train_step(self, img):
         x = img
         with tf.GradientTape() as tape:
@@ -129,11 +142,12 @@ class Task:
             loss = bits_x(lp + ll, ldj, self.pixels)
         variables = tape.watched_variables()
         grads = tape.gradient(loss, variables)
-        self.optimizer.apply_gradients(zip(grads, variables))
-        self.train_nll(loss)
-        self.train_ldj(ldj)
 
-    @tf.function
+        loss = tf.reduce_sum(loss) / self.hparams["batch_sizes"][0]
+        ldj = tf.reduce_sum(ldj) / self.hparams["batch_sizes"][0]
+        self.optimizer.apply_gradients(zip(grads, variables))
+        return loss, ldj
+
     def valid_step(self, img):
         x = img
         z, ldj, zaux, ll = self.glow(x, training=False)
@@ -141,10 +155,10 @@ class Task:
         zaux = tf.reshape(zaux, [-1, self.zaux_dims])
         lp = self.target_distribution[0].log_prob(z)
         loss = bits_x(lp + ll, ldj, self.pixels)
-        self.valid_nll(loss)
-        self.valid_ldj(ldj)
+        loss = tf.reduce_sum(loss) / self.hparams["batch_sizes"][1]
+        ldj = tf.reduce_sum(ldj) / self.hparams["batch_sizes"][1]
+        return loss, ldj
 
-    @tf.function
     def eval_step(self, img):
         x = img
         z, ldj, zaux, ll = self.glow(x, training=False)
@@ -152,6 +166,41 @@ class Task:
         zaux = tf.reshape(zaux, [-1, self.zaux_dims])
         lp = self.target_distribution[0].log_prob(z)
         loss = bits_x(lp + ll, ldj, self.pixels)
+        loss = tf.reduce_sum(loss) / self.hparams["batch_sizes"][2]
+        return loss
+
+    @tf.function
+    def distributed_train_step(self, dist_img):
+        per_replica_loss, per_replica_ldj = self.strategy.run(
+            self.train_step, args=(dist_img,)
+        )
+        loss = self.strategy.reduce(
+            tf.distribute.ReduceOp.SUM, per_replica_loss, axis=None
+        )
+        ldj = self.strategy.reduce(
+            tf.distribute.ReduceOp.SUM, per_replica_ldj, axis=None
+        )
+        return loss, ldj
+
+    @tf.function
+    def distributed_valid_step(self, dist_img):
+        per_replica_loss, per_replica_ldj = self.strategy.run(
+            self.valid_step, args=(dist_img,)
+        )
+        loss = self.strategy.reduce(
+            tf.distribute.ReduceOp.SUM, per_replica_loss, axis=None
+        )
+        ldj = self.strategy.reduce(
+            tf.distribute.ReduceOp.SUM, per_replica_ldj, axis=None
+        )
+        return loss, ldj
+
+    @tf.function
+    def distributed_eval_step(self, dist_img):
+        per_replica_loss = self.strategy.run(self.eval_step, args=(dist_img,))
+        loss = self.strategy.reduce(
+            tf.distribute.ReduceOp.SUM, per_replica_loss, axis=None
+        )
         return loss
 
     def sample_image(self, beta_z: float = 0.75, beta_zaux: float = 0.75):
@@ -181,10 +230,16 @@ class Task:
 
     def train(self):
         for epoch in range(self.hparams["epochs"]):
-            for x in tqdm(self.train_dataset):
-                self.train_step(x["img"])
+            for x in tqdm(self.train_distribute_dataset):
+                loss, ldj = self.distributed_train_step(x["img"])
+                self.train_nll(loss)
+                self.train_ldj(ldj)
+
             for x in tqdm(self.valid_dataset):
-                self.valid_step(x["img"])
+                loss, ldj = self.distributed_valid_step(x["img"])
+                self.valid_nll(loss)
+                self.valid_ldj(ldj)
+
             ckpt_save_path = self.ckpt_manager.save()
             with self.writer.as_default():
                 self.sample_image(
@@ -218,8 +273,8 @@ class Task:
 
     def eval(self):
         losses = []
-        for x in tqdm(self.train_dataset):
-            losses.append(tf.reduce_mean(self.eval_step(x["img"])))
+        for x in tqdm(self.test_distribute_dataset):
+            losses.append(tf.reduce_mean(self.distributed_eval_step(x["img"])))
         logger.info("eval: nll {}".format(tf.reduce_mean(losses)))
 
 
